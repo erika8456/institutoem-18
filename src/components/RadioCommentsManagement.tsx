@@ -14,16 +14,18 @@ interface Comment {
   is_approved: boolean;
   created_at: string;
   program_id?: string;
-  profiles: {
-    full_name: string | null;
-    email: string;
-  } | null;
+  user_id: string;
+}
+
+interface CommentWithProfile extends Comment {
+  user_email?: string;
+  user_name?: string;
 }
 
 const RadioCommentsManagement: React.FC = () => {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentWithProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
 
@@ -56,23 +58,14 @@ const RadioCommentsManagement: React.FC = () => {
   const fetchComments = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get the comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('radio_comments')
-        .select(`
-          id,
-          content,
-          is_approved,
-          created_at,
-          program_id,
-          profiles!user_id (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching comments:', error);
+      if (commentsError) {
+        console.error('Error fetching comments:', commentsError);
         toast({
           title: "Erro",
           description: "Erro ao carregar comentários",
@@ -81,7 +74,29 @@ const RadioCommentsManagement: React.FC = () => {
         return;
       }
 
-      setComments(data || []);
+      if (!commentsData) {
+        setComments([]);
+        return;
+      }
+
+      // Then get the user profiles for each comment
+      const userIds = [...new Set(commentsData.map(c => c.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, email, full_name')
+        .in('user_id', userIds);
+
+      // Combine comments with profile data
+      const commentsWithProfiles: CommentWithProfile[] = commentsData.map(comment => {
+        const profile = profilesData?.find(p => p.user_id === comment.user_id);
+        return {
+          ...comment,
+          user_email: profile?.email,
+          user_name: profile?.full_name
+        };
+      });
+
+      setComments(commentsWithProfiles);
     } catch (error) {
       console.error('Error fetching comments:', error);
     } finally {
@@ -237,7 +252,7 @@ const RadioCommentsManagement: React.FC = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-medium">
-                        {comment.profiles?.full_name || comment.profiles?.email || 'Usuário'}
+                        {comment.user_name || comment.user_email || 'Usuário'}
                       </span>
                       <Badge variant={comment.is_approved ? "default" : "secondary"}>
                         {comment.is_approved ? "Aprovado" : "Pendente"}

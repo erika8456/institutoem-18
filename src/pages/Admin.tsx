@@ -15,6 +15,8 @@ import { RadioProgramManagement } from "@/components/RadioProgramManagement";
 import JobsManagement from "@/components/JobsManagement";
 import ScholarshipsManagement from "@/components/ScholarshipsManagement";
 import ContactManagement from "@/components/ContactManagement";
+import RadioPollsManagement from "@/components/RadioPollsManagement";
+import RadioCommentsManagement from "@/components/RadioCommentsManagement";
 
 interface ServiceRequest {
   id: string;
@@ -239,7 +241,7 @@ const Admin = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="requests" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-10">
+          <TabsList className="grid w-full grid-cols-12">
             <TabsTrigger value="requests">Solicitações</TabsTrigger>
             <TabsTrigger value="candidates">Candidatos</TabsTrigger>
             <TabsTrigger value="jobs">Vagas</TabsTrigger>
@@ -248,6 +250,8 @@ const Admin = () => {
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="radio-team">Equipa Rádio</TabsTrigger>
             <TabsTrigger value="radio-programs">Programação</TabsTrigger>
+            <TabsTrigger value="radio-polls">Enquetes</TabsTrigger>
+            <TabsTrigger value="radio-comments">Comentários</TabsTrigger>
             <TabsTrigger value="admins">Administradores</TabsTrigger>
             <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
@@ -353,6 +357,14 @@ const Admin = () => {
 
           <TabsContent value="radio-programs">
             <RadioProgramManagement />
+          </TabsContent>
+
+          <TabsContent value="radio-polls">
+            <RadioPollsManagement />
+          </TabsContent>
+
+          <TabsContent value="radio-comments">
+            <RadioCommentsManagement />
           </TabsContent>
 
           <TabsContent value="admins">
