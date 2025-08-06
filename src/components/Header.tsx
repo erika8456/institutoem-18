@@ -1,15 +1,24 @@
 import { Button } from "@/components/ui/button";
-import { Search, Radio, Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Search, Radio, Menu, X, User, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 const Header = () => {
   const {
     language,
     setLanguage,
     t
   } = useLanguage();
+  const { user, profile, signOut, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
   const mainMenuItems = [{
     label: t('nav.news'),
     href: "/",
@@ -62,18 +71,44 @@ const Header = () => {
               </button>
             </div>
             
-            {/* Auth buttons */}
+            {/* Auth section */}
             <div className="hidden md:flex items-center gap-2">
-              <Link to="/login">
-                <Button variant="outline" size="sm">
-                  Entrar
-                </Button>
-              </Link>
-              <Link to="/registro">
-                <Button size="sm">
-                  Registrar
-                </Button>
-              </Link>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <User className="h-4 w-4" />
+                      {profile?.full_name || user.email?.split('@')[0] || 'Usuário'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin">
+                          Administração
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Link to="/auth">
+                    <Button variant="outline" size="sm">
+                      Entrar
+                    </Button>
+                  </Link>
+                  <Link to="/auth">
+                    <Button size="sm">
+                      Registrar
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
             
             <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
